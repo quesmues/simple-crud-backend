@@ -1,38 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.apps.v1.login.schemas import Token
+from api.apps.v1.login.exceptions import LoginIncorretoException
+from api.apps.v1.login.schemas import Token, TokenUsuario
+from api.apps.v1.login.services import create_token
 from api.apps.v1.usuario import services
-from api.config.auth import create_access_token, create_refresh_token, verify_password
 from api.config.settings import settings
+from api.core.auth import verify_password
 from api.core.database import get_db
 
 router = APIRouter(prefix="/login")
 
 
 @router.post(
-    "/",
+    "",
     response_model=Token,
 )
 async def login(
     form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
-    user = services.get_usuario(form.usuario, None)
+    user = await services.get_usuario(db=db, username=form.username)
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect email or password",
-        )
+        raise LoginIncorretoException
 
-    hashed_pass = user["password"]
-    if not verify_password(form.password, hashed_pass):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect email or password",
-        )
+    password_hash = user.password
+    if not verify_password(form.password, password_hash):
+        raise LoginIncorretoException
+
+    usuario = TokenUsuario.from_orm(user).dict()
 
     return {
-        "access_token": create_access_token(user["email"]),
-        "refresh_token": create_refresh_token(user["email"]),
+        "access_token": await create_token(
+            usuario, minutes=settings.jwt_configs.get("ACCESS_TOKEN_EXPIRE_MINUTES")
+        ),
+        "refresh_token": await create_token(
+            usuario, minutes=settings.jwt_configs.get("REFRESH_TOKEN_EXPIRE_MINUTES")
+        ),
     }
