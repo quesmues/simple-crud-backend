@@ -4,14 +4,14 @@ from api.apps.v1.usuario import models, schemas
 from api.core.auth import get_hashed_password
 
 
-async def get_usuario(db: Session, username: int):
+async def get_usuario(db: Session, username: str):
     email = db.query(models.Usuario).filter_by(email=username).first()
     if email:
         return email
     return db.query(models.Usuario).filter_by(username=username).first()
 
 
-async def get_usuario_by_id(db: Session, usuario_id: int):
+async def get_usuario_by_id(db: Session, usuario_id: str):
     return db.query(models.Usuario).get(usuario_id)
 
 
