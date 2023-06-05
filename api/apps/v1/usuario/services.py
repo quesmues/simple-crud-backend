@@ -19,7 +19,9 @@ async def get_usuario_by_id(db: Session, usuario_id: str):
 
 
 async def delete_usuario_by_id(db: Session, usuario_id: str):
-    return db.query(models.Usuario).delete(usuario_id)
+    db_user = db.query(models.Usuario).get(usuario_id)
+    db.delete(db_user)
+    db.commit()
 
 
 async def get_usuarios(db: Session, offset: int = 0, limit: int = 100):
@@ -46,7 +48,6 @@ async def patch_usuario(db: Session, user_id: UUID4, usuario: schemas.Usuario):
     )
     if usuario.password.get_secret_value() != "**********":
         db_usuario.password = get_hashed_password(usuario.password.get_secret_value())
-    db.merge(db_usuario)
+    merged = db.merge(db_usuario)
     db.commit()
-    db.refresh(db_usuario)
-    return db_usuario
+    return merged

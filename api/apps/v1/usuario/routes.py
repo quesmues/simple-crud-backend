@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import UUID4
 from sqlalchemy.orm import Session
 
@@ -78,7 +78,8 @@ async def delete_usuario(
     token: str = Depends(reuseable_oauth),
 ):
     await validate_token(token)
-    db_usuario = await services.delete_usuario_by_id(db, usuario_id=usuario_id)
+    db_usuario = await services.get_usuario_by_id(db, usuario_id=usuario_id)
     if db_usuario is None:
         raise UsuarioNaoEncontradoException()
-    return db_usuario
+    await services.delete_usuario_by_id(db, usuario_id=usuario_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
