@@ -44,6 +44,8 @@ E os endpoints implementados são:
 GET http://127.0.0.1:8000/api/v1/usuario
 POST http://127.0.0.1:8000/api/v1/usuario
 GET http://127.0.0.1:8000/api/v1/usuario/<id>/
+PATCH http://127.0.0.1:8000/api/v1/usuario/<id>/
+DELETE http://127.0.0.1:8000/api/v1/usuario/<id>/
 
 POST http://127.0.0.1:8000/api/v1/login
 ```
@@ -98,7 +100,7 @@ pytest
 
 ## Construído com
 
-FastAPI, SQLAlchemy.
+FastAPI, SQLAlchemy, MySQL.
 
 ## Autor
 
