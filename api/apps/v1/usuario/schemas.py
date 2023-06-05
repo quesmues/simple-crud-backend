@@ -1,4 +1,5 @@
 from typing import Optional
+from httpx import stream
 
 from pydantic import UUID4, BaseModel, EmailStr, SecretStr
 

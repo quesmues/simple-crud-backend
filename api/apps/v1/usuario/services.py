@@ -1,3 +1,6 @@
+import email
+
+from pydantic import UUID4
 from sqlalchemy.orm import Session
 
 from api.apps.v1.usuario import models, schemas
@@ -15,6 +18,10 @@ async def get_usuario_by_id(db: Session, usuario_id: str):
     return db.query(models.Usuario).get(usuario_id)
 
 
+async def delete_usuario_by_id(db: Session, usuario_id: str):
+    return db.query(models.Usuario).delete(usuario_id)
+
+
 async def get_usuarios(db: Session, offset: int = 0, limit: int = 100):
     return db.query(models.Usuario).offset(offset).limit(limit).all()
 
@@ -26,6 +33,20 @@ async def create_usuario(db: Session, usuario: schemas.Usuario):
         password=get_hashed_password(usuario.password.get_secret_value()),
     )
     db.add(db_usuario)
+    db.commit()
+    db.refresh(db_usuario)
+    return db_usuario
+
+
+async def patch_usuario(db: Session, user_id: UUID4, usuario: schemas.Usuario):
+    db_usuario = models.Usuario(
+        id=str(user_id),
+        email=usuario.email,
+        username=usuario.username,
+    )
+    if usuario.password.get_secret_value() != "**********":
+        db_usuario.password = get_hashed_password(usuario.password.get_secret_value())
+    db.merge(db_usuario)
     db.commit()
     db.refresh(db_usuario)
     return db_usuario
